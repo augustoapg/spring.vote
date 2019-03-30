@@ -1,6 +1,6 @@
 package ca.sheridancollege.beans;
 
-import java.util.Calendar;
+import java.util.Date;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -27,7 +27,7 @@ public class Voter {
 	private String firstName;
 	private String lastName;
 	@Temporal(TemporalType.DATE)
-	private Calendar birthday;
+	private Date birthday;
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Address address;
 	@OneToOne

@@ -70,10 +70,10 @@ public class HomeController {
 	
 	@InitBinder
 	public void initBinder(WebDataBinder webDataBinder) {
-	 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
-	 dateFormat.setLenient(false);
-	 webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
-	 }
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
+		dateFormat.setLenient(false);
+		webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
+	}
 	
 	@RequestMapping("/registerVoter")
 	public String registerVoter(Model model, @ModelAttribute Voter voter, BindingResult result) {
@@ -153,11 +153,12 @@ public class HomeController {
 		}
 	}
 	
-	private boolean isAgeValid(Calendar bd) {
+	private boolean isAgeValid(Date bd) {
+		Date today = new Date();
 		Calendar minBd = Calendar.getInstance();
 		minBd.set(Calendar.YEAR, minBd.get(Calendar.YEAR) - 18);
 
-		if (bd.before(minBd)) {
+		if (bd.before(minBd.getTime())) {
 			return true;
 		}
 		return false;

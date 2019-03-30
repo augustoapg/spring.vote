@@ -64,37 +64,37 @@
 		<form:form action="${url}" modelAttribute="voter">
 			<div class="form-group">
 				<label>SIN:</label>
-				<form:input type="text" path="sin" name="sin" class="form-control" placeholder="SIN"/>
+				<form:input type="text" path="sin" name="sin" class="form-control" placeholder="SIN" required="required" />
 				<small id="sinHelp" class="form-text text-muted">SIN needs to be a 9 digit number</small>
 			</div>
 			<div class="form-group">
 				<label>First Name:</label>
-				<form:input type="text" path="firstName" name="firstName" class="form-control" placeholder="First Name" />
+				<form:input type="text" path="firstName" name="firstName" class="form-control" placeholder="First Name" required="required" />
 			</div>
 			<div class="form-group">
 				<label>Last Name:</label>
-				<form:input type="text" path="lastName" name="lastName" class="form-control" placeholder="Last Name" />
+				<form:input type="text" path="lastName" name="lastName" class="form-control" placeholder="Last Name" required="required" />
 			</div>
 			<div class="form-group">
 				<label>Birthday:</label>
-				<form:input type="date" id="birthday" path="birthday" name="birthday" class="form-control" placeholder="yyyy-mm-dd" />
+				<form:input type="date" id="birthday" path="birthday" name="birthday" class="form-control" placeholder="yyyy-mm-dd" required="required" />
 				<small id="birthdateHelp" class="form-text text-muted">You need to be older than 18 to vote</small>
 			</div>
 			<div class="form-group">
 				<label>Street:</label>
-				<form:input type="text" name="street" path="address.street" class="form-control" placeholder="Street" />
+				<form:input type="text" name="street" path="address.street" class="form-control" placeholder="Street" required="required" />
 			</div>
 			<div class="form-group">
 				<label>City:</label>
-				 <form:input type="text" name="city" path="address.city" class="form-control" placeholder="City" />
+				 <form:input type="text" name="city" path="address.city" class="form-control" placeholder="City" required="required" />
 			</div>
 			<div class="form-group">
 				<label>Province:</label>
-				 <form:input type="text" name="province" path="address.province" class="form-control" placeholder="Province" />
+				 <form:input type="text" name="province" path="address.province" class="form-control" placeholder="Province" required="required" />
 			</div>
 			<div class="form-group">
 				<label>Postal Code:</label>
-				 <form:input type="text" name="postal" path="address.postal" class="form-control" placeholder="Postal Code" />
+				 <form:input type="text" name="postal" path="address.postal" class="form-control" placeholder="Postal Code" required="required" />
 			</div>
 			<input type="submit" value="Register" class="btn btn-default"/>
 		</form:form>

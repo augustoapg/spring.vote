@@ -1,6 +1,7 @@
 package ca.sheridancollege.dao;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -36,31 +37,27 @@ public class Dao {
 		String sin = "";
 		String firstName = "";
 		String lastName = "";
-		Calendar birthday = null;
+		Date birthday = null;
 		String street = "";
 		String city = "";
 		String province = "";
 		String postal = "";
 		Voter voter = null;
-		int randomCityIndex = 0;
+		@SuppressWarnings("deprecation")
+		Date minBd = new Date(new Date().getYear() - 90, 0, 1);
+		@SuppressWarnings("deprecation")
+		Date maxBd = new Date(new Date().getYear() - 18, 0, 1);
+		Faker faker = new Faker(new Locale("en-CA"));
 
 		for (int i = 0; i < 200; i++) {
 			sin = "111222" + String.format("%03d", i);
-			Faker faker = new Faker(new Locale("ca"));
 			firstName = faker.name().firstName();
 			lastName = faker.name().lastName();
-			birthday = Calendar.getInstance(); // resets
-			/* random age between 19 and 90 (chose 19 because with 18 it would require making sure that the day/month were
-			 * before today's day/month */
-			birthday.set(birthday.get(Calendar.YEAR) - randomBetween(19, 90), randomBetween(1, 12),
-					randomBetween(1, 28));
-			street = randomBetween(1, 400) + " Random Rd.";
-			randomCityIndex = randomBetween(0, City.values().length - 1);
-			city = City.values()[randomCityIndex].getCity();
-			province = City.values()[randomCityIndex].getProvince();
-			postal = "A" + randomBetween(1, 9) + "B " + randomBetween(1, 9) + "C" + randomBetween(1, 9);
+			birthday = faker.date().between(minBd, maxBd);
 			street = faker.address().streetAddress();
-
+			city = faker.address().city();
+			province = faker.address().stateAbbr();
+			postal = "A" + randomBetween(1, 9) + "B " + randomBetween(1, 9) + "C" + randomBetween(1, 9);
 			voter = new Voter(sin, firstName, lastName, birthday, new Address(street, city, province, postal), null);
 			registerVoter(voter);
 		}
