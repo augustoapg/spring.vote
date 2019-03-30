@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
     pageEncoding="ISO-8859-1"%>
 <%@ taglib uri = "http://java.sun.com/jsp/jstl/core" prefix = "c" %>
+<%@ taglib uri = "http://www.springframework.org/tags/form" prefix = "form" %>
 
 <!DOCTYPE html>
 
@@ -61,24 +62,20 @@
 				${success_msg}
 			</div>
 		</c:if>
-		<form method="post" id="frmVote">
+		
+		<c:url var="url" value="/addVote" />
+		
+		<form:form id="frmVote" action="${url}" modelAttribute="vote">
 			<div class="form-group">
 				<label>SIN:</label>
-				<input type="text" name="sin" class="form-control" placeholder="SIN" pattern="\d{9}" required/>
+				<form:input type="text" name="sin" path="voter.sin" class="form-control" placeholder="SIN" required="required" />
 				<div class="input-group mb-3">
-				  	<select class="form-control" name="party-voted" id="ddl-party">
-					    <option selected value="not-selected">Select your party...</option>
-					    <option value="Liberal">Liberal Party</option>
-					    <option value="Conservative">Conservative Party</option>
-					    <option value="New Democratic">New Democratic Party</option>
-					    <option value="Bloc Quebecois">Bloc Quebecois</option>
-					    <option value="Green">Green Party</option>
-				  	</select>
+				  	<form:select class="form-control" name="party-voted" id="ddl-party" path="partyVoted" items="${vote.possibleParties}" />
 				</div>
 				<p class="not-selected-msg hidden">Please select one of the parties</p>
 				<input id="btnSubmit" type="submit" value="Vote!" class="btn btn-default"/>
 			</div>
-		</form>
+		</form:form>
 	</div>
 	
 	<script>
@@ -87,7 +84,6 @@
 			$('#frmVote').on('submit', function(e){
 				if($("#ddl-party").val() !== "not-selected") {
 					$(".not-selected-msg").addClass("hidden");
-					$("#frmVote").attr("action", "VoteController");
 					$("#frmVote").submit();
 				} else {
 					$(".not-selected-msg").removeClass("hidden");

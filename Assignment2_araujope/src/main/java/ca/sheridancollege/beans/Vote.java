@@ -5,6 +5,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,6 +24,9 @@ public class Vote {
 	private String partyVoted;
 	@OneToOne
 	private Voter voter;
+	
+	@Transient
+	private String[] possibleParties = {"Liberal", "Conservative", "New Democratic", "Bloc Quebecois", "Green"};
 	
 	public Vote(String partyVoted, Voter voter) {
 		this.partyVoted = partyVoted;

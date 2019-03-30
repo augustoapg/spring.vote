@@ -13,8 +13,11 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import ca.sheridancollege.beans.Vote;
 import ca.sheridancollege.beans.Voter;
 import ca.sheridancollege.dao.Dao;
+import javassist.NotFoundException;
 
 @Controller
 public class HomeController {
@@ -110,7 +113,24 @@ public class HomeController {
 	}
 	
 	@RequestMapping("/vote")
-	public String goVote() {
+	public String goVote(Model model) {
+		model.addAttribute("vote", new Vote());
+		return "Vote";
+	}
+	
+	@RequestMapping("/addVote")
+	public String addVote(Model model, @ModelAttribute Vote vote) {
+		synchronized(Vote.class) {
+			try {
+				dao.updateVote(vote.getVoter().getSin(), vote.getPartyVoted());
+				model.addAttribute("success_msg", "Thank you for voting!");
+			} catch(NotFoundException ex) {
+				model.addAttribute("error_msg", ex.getMessage());
+			} catch(IllegalArgumentException ex) {
+				model.addAttribute("error_msg", ex.getMessage());
+			}
+		}
+		model.addAttribute("vote", new Vote());
 		return "Vote";
 	}
 	
