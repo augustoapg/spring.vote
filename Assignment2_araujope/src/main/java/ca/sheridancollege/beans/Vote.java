@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @NamedQuery(name = "vote.numVotesByParty", query = "select count(*) from Vote where partyVoted = :party")
+@NamedQuery(name = "vote.getVoteBySin", query = "from Vote where voter_sin = :sin")
 public class Vote {
 
 	@Id

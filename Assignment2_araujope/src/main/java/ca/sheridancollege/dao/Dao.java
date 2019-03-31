@@ -17,7 +17,6 @@ import com.github.javafaker.Faker;
 import ca.sheridancollege.beans.Address;
 import ca.sheridancollege.beans.Vote;
 import ca.sheridancollege.beans.Voter;
-import ca.sheridancollege.enums.City;
 import ca.sheridancollege.enums.Party;
 import javassist.NotFoundException;
 
@@ -166,6 +165,24 @@ public class Dao {
 		return voter;
 	}
 	
+	public Vote getVoteBySin(String sin) {
+		Session session = sessionFactory.openSession();
+		session.beginTransaction();
+		
+		Query query = session.getNamedQuery("vote.getVoteBySin");
+		query.setParameter("sin", sin);
+		List<Vote> voteList = (List<Vote>)query.getResultList();
+		
+		session.getTransaction().commit();
+		session.close();
+		
+		if(voteList.isEmpty()) {
+			return null;
+		} else {
+			return voteList.get(0);
+		}
+	}
+	
 	public void updateVote(String sin, String party) throws NotFoundException, IllegalArgumentException {
 		Session session = sessionFactory.openSession();
 		session.beginTransaction();
@@ -267,5 +284,36 @@ public class Dao {
 		session.close();
 		
 		return numVotesByAge;
+	}
+	
+	public void editVoter(Voter voter, String sin) {
+		Session session = sessionFactory.openSession();
+		session.beginTransaction();
+		
+		Voter oldVoter = (Voter)session.get(Voter.class, sin);
+		
+		if(oldVoter != null) {
+			oldVoter.setSin(voter.getSin());
+			oldVoter.setFirstName(voter.getFirstName());
+			oldVoter.setLastName(voter.getLastName());
+			oldVoter.setAddress(voter.getAddress());
+			oldVoter.setBirthday(voter.getBirthday());
+		}
+		
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	public void deleteVoterBySin(String sin) {
+		Session session = sessionFactory.openSession();
+		session.beginTransaction();
+		
+		Voter voter = (Voter)session.get(Voter.class, sin);
+		if(voter != null) {
+			session.delete(voter);
+		}
+		
+		session.getTransaction().commit();
+		session.close();
 	}
 }

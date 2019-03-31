@@ -3,6 +3,7 @@ package ca.sheridancollege;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
@@ -12,7 +13,9 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import ca.sheridancollege.beans.Vote;
 import ca.sheridancollege.beans.Voter;
@@ -73,7 +76,7 @@ public class HomeController {
 	
 	@InitBinder
 	public void initBinder(WebDataBinder webDataBinder) {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		dateFormat.setLenient(false);
 		webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
 	}
@@ -107,11 +110,6 @@ public class HomeController {
 		return "Register";
 	}
 	
-	@RequestMapping("/stats")
-	public String goStats() {
-		return "Stats";
-	}
-	
 	@RequestMapping("/vote")
 	public String goVote(Model model) {
 		model.addAttribute("vote", new Vote());
@@ -135,10 +133,75 @@ public class HomeController {
 	}
 	
 	@RequestMapping("/voters")
-	public String goVoters() {
+	public String goVoters(Model model) {
+		List<Voter> allVoters = dao.getAllVoters();
+		model.addAttribute("voters", allVoters);
 		return "Voters";
 	}
 	
+	@RequestMapping("/edit/{sin}")
+	public String goToEditVoter(Model model, @PathVariable String sin) {
+		Voter voter = dao.getVoterBySin(sin);
+		model.addAttribute("voter", voter);
+		return "EditVoter";
+	}
+	
+	@RequestMapping("/editVoter")
+	public String editVoter(Model model, @ModelAttribute Voter voter, @RequestParam String oldSin) {
+		// check if sin was changed
+		if(!voter.getSin().equals(oldSin)) {
+			// check if sin was changed but conflicts with another existing sin
+			if(dao.getVoterBySin(voter.getSin()) == null) {
+				
+				// save vote if existent
+				Vote vote = dao.getVoteBySin(oldSin);
+				// delete old entry
+				dao.deleteVoterBySin(oldSin);
+				// register updated voter with new sin
+				synchronized(Voter.class) {
+					dao.registerVoter(voter);
+				}
+				//assign old vote to updated entry
+				if(vote != null) {				
+					synchronized (Vote.class) {
+						try {
+							dao.updateVote(voter.getSin(), vote.getPartyVoted());
+						} catch(NotFoundException ex) {
+							model.addAttribute("error_msg", ex.getMessage());
+						} catch(IllegalArgumentException ex) {
+							model.addAttribute("error_msg", ex.getMessage());
+						}
+					}
+				}
+				
+				model.addAttribute("success_msg", "Voter was edited!");
+				model.addAttribute("voters", dao.getAllVoters());
+				return "Voters";
+			} else {
+				model.addAttribute("error_msg", "The new SIN value chosen is already registered.");
+				model.addAttribute("voter", voter);
+				return "EditVoter";
+			}
+		} else {
+			dao.editVoter(voter, oldSin);
+			model.addAttribute("success_msg", "Voter was edited!");
+			model.addAttribute("voters", dao.getAllVoters());
+			return "Voters";
+		}
+	}
+	
+	@RequestMapping("/delete/{sin}")
+	public String deleteVoter(Model model, @PathVariable String sin) {
+		dao.deleteVoterBySin(sin);
+		model.addAttribute("success_msg", "Voter was deleted!");
+		model.addAttribute("voters", dao.getAllVoters());
+		return "Voters";
+	}
+	
+	@RequestMapping("/stats")
+	public String goStats() {
+		return "Stats";
+	}
 	
 	/**
 	 * check if dummy voters and votes had been added already or not, updating the 

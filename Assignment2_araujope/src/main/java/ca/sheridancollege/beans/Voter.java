@@ -30,6 +30,6 @@ public class Voter {
 	private Date birthday;
 	@ManyToOne(cascade = CascadeType.ALL)
 	private Address address;
-	@OneToOne
+	@OneToOne(cascade= {CascadeType.REMOVE})
 	private Vote vote;
 }
