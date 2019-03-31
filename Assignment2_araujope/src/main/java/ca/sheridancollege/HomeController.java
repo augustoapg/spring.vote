@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import ca.sheridancollege.beans.Vote;
 import ca.sheridancollege.beans.Voter;
 import ca.sheridancollege.dao.Dao;
+import ca.sheridancollege.enums.Party;
 import javassist.NotFoundException;
 
 @Controller
@@ -46,9 +47,15 @@ public class HomeController {
 	
 	@RequestMapping("/addDummyVoters")
 	public String addDummyVoters(Model model) {
-		dummyVotersAdded = dao.addDummyVoters();
-		model.addAttribute("success_msg", "Dummy voters added!");
+		try {
+			dummyVotersAdded = dao.addDummyVoters();
+			model.addAttribute("success_msg", "Dummy voters added!");
+		} catch(IllegalArgumentException ex) {
+			dummyVotersAdded = true;
+			model.addAttribute("error_msg", "Dummy voters were already added");
+		}
 		model.addAttribute("dummy_voters_added", dummyVotersAdded);
+		
 		return "index";
 	}
 	
@@ -199,7 +206,41 @@ public class HomeController {
 	}
 	
 	@RequestMapping("/stats")
-	public String goStats() {
+	public String goStats(Model model) {
+		long numOfVotes = dao.getNumVotes();
+		
+		// get % of each party
+		for(int i = 0; i < Party.values().length; i++) {
+			String partyName = Party.values()[i].getPartyName();
+			String attrName = Party.values()[i].getAttrName();
+			long partyVote = dao.getNumVotesByParty(partyName);
+			double percVote = Math.round(((double)partyVote/(double)numOfVotes) * 1000.0) / 1000.0;
+			model.addAttribute(attrName + "Perc", percVote);
+		}
+		
+		// get % of eligible voters that did vote
+		long numOfVoters = dao.getNumberOfVoters();
+		double percVotersWhoVoted = Math.round(((double)numOfVotes/(double)numOfVoters) * 1000.0) / 1000.0;
+		double percVotersWhoDidNotVote = 1.0 - percVotersWhoVoted;
+		model.addAttribute("votersWhoVotedPerc", percVotersWhoVoted);
+		model.addAttribute("votersWhoDidNotVotePerc", percVotersWhoDidNotVote);
+		
+		// get % of age groups
+		long from18to29 = dao.getVotersByAgeGroup(18, 29);
+		long from30to44 = dao.getVotersByAgeGroup(30, 44);
+		long from45to59 = dao.getVotersByAgeGroup(45, 59);
+		long from60 = dao.getVotersByAgeGroup(60);
+		
+		double from18to29Perc = Math.round(((double)from18to29/(double)numOfVotes) * 1000.0) / 1000.0;
+		double from30to44Perc = Math.round(((double)from30to44/(double)numOfVotes) * 1000.0) / 1000.0;
+		double from45to59Perc = Math.round(((double)from45to59/(double)numOfVotes) * 1000.0) / 1000.0;
+		double from60Perc = Math.round(((double)from60/(double)numOfVotes) * 1000.0) / 1000.0;
+		
+		model.addAttribute("from18to29Perc", from18to29Perc);
+		model.addAttribute("from30to44Perc", from30to44Perc);
+		model.addAttribute("from45to59Perc", from45to59Perc);
+		model.addAttribute("from60Perc", from60Perc);
+		
 		return "Stats";
 	}
 	

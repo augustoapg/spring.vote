@@ -1,5 +1,6 @@
 package ca.sheridancollege.dao;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -11,6 +12,7 @@ import javax.persistence.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.exception.ConstraintViolationException;
 
 import com.github.javafaker.Faker;
 
@@ -32,7 +34,7 @@ public class Dao {
 	 * 
 	 * @return true when successful
 	 */
-	public boolean addDummyVoters() {
+	public boolean addDummyVoters() throws ConstraintViolationException {
 		String sin = "";
 		String firstName = "";
 		String lastName = "";
@@ -58,7 +60,13 @@ public class Dao {
 			province = faker.address().stateAbbr();
 			postal = "A" + randomBetween(1, 9) + "B " + randomBetween(1, 9) + "C" + randomBetween(1, 9);
 			voter = new Voter(sin, firstName, lastName, birthday, new Address(street, city, province, postal), null);
-			registerVoter(voter);
+			
+			try {
+				registerVoter(voter);
+			} catch(IllegalArgumentException ex) {
+				throw ex;
+			}
+			
 		}
 		
 		return true;
@@ -117,11 +125,20 @@ public class Dao {
 		return min + (int) (Math.random() * ((max - min) + 1));
 	}
 	
-	public void registerVoter(Voter voter) {
+	public void registerVoter(Voter voter) throws IllegalArgumentException {
 		Session session = sessionFactory.openSession();
 		session.beginTransaction();
 		
-		session.save(voter);
+		if(getVoterBySin(voter.getSin()) == null) {
+
+			session.save(voter);
+			
+		} else {
+			throw new IllegalArgumentException();
+		}
+		
+		
+		
 		
 		session.getTransaction().commit();
 		session.close();
@@ -246,17 +263,18 @@ public class Dao {
 		return numOfVotes;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public long getVotersByAgeGroup(int minAge, int maxAge) {
 		Session session = sessionFactory.openSession();
 		session.beginTransaction();
 		
 		// maxAge and maxBd refer to the older age required
-		Calendar maxBd = Calendar.getInstance();
-		maxBd.set(Calendar.YEAR, maxBd.get(Calendar.YEAR) - maxAge);
+		Date maxBd = new Date();
+		maxBd.setYear(maxBd.getYear() - maxAge);
 		
 		// minAge and minBd refers to the younger age required
-		Calendar minBd = Calendar.getInstance();
-		minBd.set(Calendar.YEAR, minBd.get(Calendar.YEAR) - minAge);
+		Date minBd = new Date();
+		minBd.setYear(minBd.getYear() - minAge);
 		
 		Query query = session.getNamedQuery("voter.voteByAgeRange");
 		query.setParameter("min_date", minBd);
@@ -269,12 +287,13 @@ public class Dao {
 		return numVotesByAge;
 	}
 	
+	@SuppressWarnings("deprecation")
 	public long getVotersByAgeGroup(int minAge) {
 		Session session = sessionFactory.openSession();
 		session.beginTransaction();
 		
-		Calendar maxBd = Calendar.getInstance();
-		maxBd.set(Calendar.YEAR, maxBd.get(Calendar.YEAR) - minAge);
+		Date maxBd = new Date();
+		maxBd.setYear(maxBd.getYear() - minAge);
 		
 		Query query = session.getNamedQuery("voter.ageOlderThan");
 		query.setParameter("min_date", maxBd);
