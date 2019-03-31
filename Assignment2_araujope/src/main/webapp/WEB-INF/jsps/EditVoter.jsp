@@ -9,11 +9,11 @@
  * Name: Augusto Araujo Peres Goncalez
  * Project: Elections
  * Description: This app allows the user to register and vote in one of 5 different parties. It also display a list
- * 				of all the voters registered and some statistics regarding the data collected. The app also allows to 
- * 				add 200 dummy voters and a random number of dummy votes.
- * Date: 09 Mar. 2019
+ * 				of all the voters registered, enabling the Edit/Delete of each, and some statistics regarding the data collected.
+ * 				The app also allows to add 200 dummy voters and a random number of dummy votes.
+ * Date: 31 Mar. 2019
  * 
- * File: Stats - Display a form where the user can input their information to register to vote
+ * File: EditVoter - Display a form where the user can change any information on a particular Voter
 -->
 
 <html>

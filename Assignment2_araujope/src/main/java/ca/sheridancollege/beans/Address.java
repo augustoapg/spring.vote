@@ -1,3 +1,14 @@
+/**
+ * Name: Augusto Araujo Peres Goncalez
+ * Project: Elections
+ * Description: This app allows the user to register and vote in one of 5 different parties. It also display a list
+ * 				of all the voters registered, enabling the Edit/Delete of each, and some statistics regarding the data collected.
+ * 				The app also allows to add 200 dummy voters and a random number of dummy votes.
+ * Date: 31 Mar. 2019
+ * 
+ * File: Address - Java Bean for creating an Address object
+ */
+
 package ca.sheridancollege.beans;
 
 import javax.persistence.Entity;
