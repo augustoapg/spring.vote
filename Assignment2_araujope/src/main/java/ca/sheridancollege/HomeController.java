@@ -111,19 +111,20 @@ public class HomeController {
 			return "Register";
 		}
 		
-		if(isAgeValid(voter.getBirthday())) {
-			if(isSinValid(voter.getSin())) {
-				synchronized(Voter.class) {
-					dao.registerVoter(voter);
-					model.addAttribute("success_msg", "Voter was registered!");
-				}
-			} else {
-				model.addAttribute("error_msg", "SIN must be a 9 digits number");
-			}
-		} else {
-			model.addAttribute("error_msg", "Voter needs to be at least 18 years old");
+		model = validateVoter(model, voter);
+		if(model.containsAttribute("error_msg")) {
+			return "Register";
 		}
-		
+		synchronized(Voter.class) {
+			try {
+				dao.registerVoter(voter);
+				model.addAttribute("success_msg", "Voter was registered successfully!");
+			} catch(IllegalArgumentException ex) {
+				model.addAttribute("voter", voter);
+				model.addAttribute("error_msg", "A Voter with this SIN is already registered. Please verify your SIN and try again");
+				return "Register";
+			}
+		}
 		
 		model.addAttribute("voter", new Voter());
 		return "Register";
@@ -137,16 +138,12 @@ public class HomeController {
 	
 	@RequestMapping("/addVote")
 	public String addVote(Model model, @ModelAttribute Vote vote) {
-		synchronized(Vote.class) {
-			try {
-				dao.updateVote(vote.getVoter().getSin(), vote.getPartyVoted());
-				model.addAttribute("success_msg", "Thank you for voting!");
-			} catch(NotFoundException ex) {
-				model.addAttribute("error_msg", ex.getMessage());
-			} catch(IllegalArgumentException ex) {
-				model.addAttribute("error_msg", ex.getMessage());
-			}
+		model = updateVote(model, vote.getVoter().getSin(), vote.getPartyVoted());
+		if(model.containsAttribute("error_msg")) {
+			model.addAttribute("vote", vote);
+			return "Vote";
 		}
+		model.addAttribute("success_msg", "Thank you for voting!");
 		model.addAttribute("vote", new Vote());
 		return "Vote";
 	}
@@ -167,39 +164,23 @@ public class HomeController {
 	
 	@RequestMapping("/editVoter")
 	public String editVoter(Model model, @ModelAttribute Voter voter, @RequestParam String oldSin) {
+		model = validateVoter(model, voter);
+		if(model.containsAttribute("error_msg")) {
+			voter.setSin(oldSin);
+			model.addAttribute("voter", voter);
+			return "EditVoter";
+		}
 		// check if sin was changed
 		if(!voter.getSin().equals(oldSin)) {
-			// check if sin was changed but conflicts with another existing sin
-			if(dao.getVoterBySin(voter.getSin()) == null) {
-				
-				// save vote if existent
-				Vote vote = dao.getVoteBySin(oldSin);
-				// delete old entry
-				dao.deleteVoterBySin(oldSin);
-				// register updated voter with new sin
-				synchronized(Voter.class) {
-					dao.registerVoter(voter);
-				}
-				//assign old vote to updated entry
-				if(vote != null) {				
-					synchronized (Vote.class) {
-						try {
-							dao.updateVote(voter.getSin(), vote.getPartyVoted());
-						} catch(NotFoundException ex) {
-							model.addAttribute("error_msg", ex.getMessage());
-						} catch(IllegalArgumentException ex) {
-							model.addAttribute("error_msg", ex.getMessage());
-						}
-					}
-				}
-				
+			model = editVoterWithSinUpdated(model, voter, oldSin);
+			if(model.containsAttribute("error_msg")) {
+				voter.setSin(oldSin);
+				model.addAttribute("voter", voter);
+				return "EditVoter";
+			} else {
 				model.addAttribute("success_msg", "Voter was edited!");
 				model.addAttribute("voters", dao.getAllVoters());
 				return "Voters";
-			} else {
-				model.addAttribute("error_msg", "The new SIN value chosen is already registered.");
-				model.addAttribute("voter", voter);
-				return "EditVoter";
 			}
 		} else {
 			dao.editVoter(voter, oldSin);
@@ -209,6 +190,60 @@ public class HomeController {
 		}
 	}
 	
+	private Model editVoterWithSinUpdated(Model model, Voter voter, String oldSin) {
+		// check if sin was changed but conflicts with another existing sin
+		if(dao.getVoterBySin(voter.getSin()) == null) {
+			
+			// save vote if existent
+			Vote vote = dao.getVoteBySin(oldSin);
+			// delete old entry
+			dao.deleteVoterBySin(oldSin);
+			// register updated voter with new sin
+			synchronized(Voter.class) {
+				dao.registerVoter(voter);
+			}
+			//assign old vote to updated entry
+			if(vote != null) {
+				model = updateVote(model, voter.getSin(), vote.getPartyVoted());
+				if(model.containsAttribute("error_msg")) {
+					model.addAttribute("voters", dao.getAllVoters());
+					return model;
+				}
+			}
+			
+			model.addAttribute("success_msg", "Voter was edited!");
+			model.addAttribute("voters", dao.getAllVoters());
+		} else {
+			model.addAttribute("error_msg", "The new SIN value chosen is already registered.");
+			model.addAttribute("voter", voter);
+		}
+		return model;
+	}
+
+	private Model updateVote(Model model, String sin, String partyVoted) {
+		synchronized (Vote.class) {
+			try {
+				dao.updateVote(sin, partyVoted);
+			} catch(NotFoundException ex) {
+				model.addAttribute("error_msg", ex.getMessage());
+			} catch(IllegalArgumentException ex) {
+				model.addAttribute("error_msg", ex.getMessage());
+			}
+		}
+		return model;
+	}
+
+	private Model validateVoter(Model model, Voter voter) {
+		if(!isAgeValid(voter.getBirthday())) {
+			model.addAttribute("voter", voter);
+			model.addAttribute("error_msg", "Voter needs to be at least 18 years old");
+		} else if(!isSinValid(voter.getSin())) {
+			model.addAttribute("voter", voter);
+			model.addAttribute("error_msg", "SIN must be a 9 digits number");
+		}
+		return model;
+	}
+
 	@RequestMapping("/delete/{sin}")
 	public String deleteVoter(Model model, @PathVariable String sin) {
 		dao.deleteVoterBySin(sin);
